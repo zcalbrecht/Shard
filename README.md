@@ -1,6 +1,6 @@
 # Shard Discord Bot
 
-A multi-bot Discord system that uses fine-tuned OpenAI LLMs to generate contextual responses. Each bot has its own personality, model, and behavior. This is part of a broader "Dead Internet" project to simulate convincing human behavior in online chatrooms via the use of LLMs.
+A multi-bot Discord system that uses fine-tuned OpenAI LLMs to generate contextual responses. Each bot can be configured with its own personality, model, and behavior. This is part of a broader "Dead Internet" project to simulate convincing human behavior in online chatrooms via the use of LLMs.
 
 ## Features
 
