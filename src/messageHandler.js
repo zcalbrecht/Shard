@@ -1,4 +1,5 @@
 const OpenAIHandler = require("./openaiHandler");
+const config = require('../config.json');
 
 class MessageHandler {
     constructor(botManager) {
@@ -6,6 +7,21 @@ class MessageHandler {
         this.openaiHandler = new OpenAIHandler();
         this.messageQueue = new Map(); // channelId -> queue of pending messages
         this.channelMessageHistory = new Map(); // channelId -> array of last 5 messages
+    }
+
+    applyTextSubstitutions(text) {
+        if (!config.textSubstitutions || !Array.isArray(config.textSubstitutions)) {
+            return text;
+        }
+
+        let result = text;
+        config.textSubstitutions.forEach(sub => {
+            if (sub.from && sub.to) {
+                const regex = new RegExp(sub.from, 'gi');
+                result = result.replace(regex, sub.to);
+            }
+        });
+        return result;
     }
 
     updateMessageHistory(channelId, message) {
@@ -219,8 +235,9 @@ class MessageHandler {
                     continue; // Skip this response and move to next iteration
                 }
 
-                // Use the cleaned retry response
-                const sendPromise = channel.send(cleanedRetryResponse);
+                // Use the cleaned retry response with text substitutions
+                const substitutedRetryResponse = this.applyTextSubstitutions(cleanedRetryResponse);
+                const sendPromise = channel.send(substitutedRetryResponse);
                 queue.push(sendPromise);
                 await sendPromise;
                 
@@ -237,8 +254,9 @@ class MessageHandler {
                 continue; // Move to next iteration
             }
 
-            // Add to queue and wait for it to be sent (use cleaned response)
-            const sendPromise = channel.send(cleanedResponse);
+            // Add to queue and wait for it to be sent (use cleaned response with text substitutions)
+            const substitutedResponse = this.applyTextSubstitutions(cleanedResponse);
+            const sendPromise = channel.send(substitutedResponse);
             queue.push(sendPromise);
 
             // Wait for this message to be sent before proceeding
