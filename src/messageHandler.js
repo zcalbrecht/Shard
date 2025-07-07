@@ -5,6 +5,44 @@ class MessageHandler {
         this.botManager = botManager;
         this.openaiHandler = new OpenAIHandler();
         this.messageQueue = new Map(); // channelId -> queue of pending messages
+        this.channelMessageHistory = new Map(); // channelId -> array of last 5 messages
+    }
+
+    updateMessageHistory(channelId, message) {
+        if (!this.channelMessageHistory.has(channelId)) {
+            this.channelMessageHistory.set(channelId, []);
+        }
+        
+        const history = this.channelMessageHistory.get(channelId);
+        history.push({
+            authorId: message.author.id,
+            botUserIndex: this.getBotUserIndexFromClient(message.client),
+            timestamp: Date.now()
+        });
+        
+        // Keep only the last 5 messages
+        if (history.length > 5) {
+            history.shift();
+        }
+    }
+
+    getBotUserIndexFromClient(client) {
+        if (!client || !client.user) return -1;
+        
+        const botUsers = this.botManager.botUsers;
+        for (let i = 0; i < botUsers.length; i++) {
+            if (botUsers[i].id === client.user.id) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    hasBotRecentlyMessaged(channelId, botUserIndex) {
+        const history = this.channelMessageHistory.get(channelId);
+        if (!history) return false;
+        
+        return history.some(msg => msg.botUserIndex === botUserIndex);
     }
 
     replaceMentionsWithNames(content) {
@@ -185,6 +223,12 @@ class MessageHandler {
                 const sendPromise = channel.send(cleanedRetryResponse);
                 queue.push(sendPromise);
                 await sendPromise;
+                
+                // Update message history with this bot's retry message
+                this.updateMessageHistory(channelId, {
+                    author: { id: this.botManager.getBotUser(botUserIndex).id },
+                    client: messageOrChannel.client
+                });
 
                 // Small delay between responses to avoid rate limiting
                 if (i < responseCount - 1) {
@@ -199,6 +243,12 @@ class MessageHandler {
 
             // Wait for this message to be sent before proceeding
             await sendPromise;
+            
+            // Update message history with this bot's message
+            this.updateMessageHistory(channelId, {
+                author: { id: this.botManager.getBotUser(botUserIndex).id },
+                client: messageOrChannel.client
+            });
 
             // Small delay between responses to avoid rate limiting
             if (i < responseCount - 1) {

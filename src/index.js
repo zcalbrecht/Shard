@@ -33,8 +33,15 @@ config.botUsers.forEach((botUser, index) => {
     // Check if this is an activity channel
     const isActivityChannel = config.automatedActivity.channels.includes(message.channel.name);
     
+    // Check if this bot has recently messaged in this channel
+    const hasRecentlyMessaged = messageHandler.hasBotRecentlyMessaged(message.channel.id, index);
+    
+    // Calculate response chance - double if bot has recently messaged
+    const baseResponseRate = config.automatedActivity.randomResponseRate;
+    const adjustedResponseRate = hasRecentlyMessaged ? baseResponseRate * 2 : baseResponseRate;
+    
     // Only apply random response rate to activity channels
-    const shouldRespond = isActivityChannel ? Math.random() < config.automatedActivity.randomResponseRate : false;
+    const shouldRespond = isActivityChannel ? Math.random() < adjustedResponseRate : false;
     const isMentioned = message.mentions.users.has(client.user.id);
     
     if (!shouldRespond && !isMentioned) return;
