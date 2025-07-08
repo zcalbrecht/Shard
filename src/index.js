@@ -36,9 +36,10 @@ config.botUsers.forEach((botUser, index) => {
     // Check if this bot has recently messaged in this channel
     const hasRecentlyMessaged = messageHandler.hasBotRecentlyMessaged(message.channel.id, index);
     
-    // Calculate response chance - double if bot has recently messaged
+    // Calculate response chance - apply multiplier if bot has recently messaged
     const baseResponseRate = config.automatedActivity.randomResponseRate;
-    const adjustedResponseRate = hasRecentlyMessaged ? baseResponseRate * 2 : baseResponseRate;
+    const multiplier = config.automatedActivity.recentMessageMultiplier || 1;
+    const adjustedResponseRate = hasRecentlyMessaged ? baseResponseRate * multiplier : baseResponseRate;
     
     // Only apply random response rate to activity channels
     const shouldRespond = isActivityChannel ? Math.random() < adjustedResponseRate : false;
