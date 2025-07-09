@@ -45,7 +45,13 @@ config.botUsers.forEach((botUser, index) => {
     const shouldRespond = isActivityChannel ? Math.random() < adjustedResponseRate : false;
     const isMentioned = message.mentions.users.has(client.user.id);
     
-    if (!shouldRespond && !isMentioned) return;
+    // Check if bot is mentioned in a role tag
+    const isRoleMentioned = message.mentions.roles.some(role => {
+      const roleMembers = role.members;
+      return roleMembers.has(client.user.id);
+    });
+    
+    if (!shouldRespond && !isMentioned && !isRoleMentioned) return;
 
     try {
       const responseCount = botManager.getLootTableRoll(index);
