@@ -120,23 +120,11 @@ class MessageHandler {
             })),
         ];
 
-        // Add current message content if it's a real message (not timer)
-        if (messageOrChannel.content !== undefined) {
-            const currentUserNickname =
-                messageOrChannel.member?.nickname || messageOrChannel.author.username;
-            speakers.add(currentUserNickname);
-            
-            messages.push({
-                role: "user",
-                content: `[${currentUserNickname}] ${this.replaceMentionsWithNames(messageOrChannel.content).trim()}`,
-            });
-        }
-
         messages.push({
             role: "system",
-            content: `Respond naturally as  
+            content: `Continue the conversation naturally as  
                 ${this.botManager.getName(botUserIndex)} 
-            would in this conversation. Be engaging and authentic, and conversational at all times. You MUST respond naturally, and CRITICAL: you MUST NOT repeat yourself or others.`,
+            would in this conversation. Be engaging and authentic, and conversational at all times. You MUST respond naturally, and CRITICAL: you MUST NOT repeat yourself or others. BE mindful of who said what.`,
         });
 
         return this.openaiHandler.generateResponseWithConfig(
